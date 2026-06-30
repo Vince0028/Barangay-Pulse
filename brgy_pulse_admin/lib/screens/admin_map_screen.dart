@@ -87,6 +87,16 @@ class _AdminMapScreenState extends ConsumerState<AdminMapScreen> {
                 children: [
                   Text('Task Map', style: tt.headlineSmall),
                   const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.refresh),
+                    onSize: 20,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () {
+                      ref.read(adminReportProvider.notifier).refresh();
+                    },
+                  ),
+                  const SizedBox(width: 12),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
@@ -228,21 +238,40 @@ class _AdminMapScreenState extends ConsumerState<AdminMapScreen> {
                   ),
                 ),
               if (report.status == ReportStatus.inProgress)
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      ref.read(adminReportProvider.notifier).resolveReport(report.id);
-                      ref.read(officerProfileProvider.notifier).completeTaskLocally(report.id, report.category);
-                      Navigator.pop(ctx);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Task resolved! +${categoryPoints[report.category] ?? 10} points')),
-                      );
-                    },
-                    icon: const Icon(Icons.check_circle_outline, size: 18),
-                    label: const Text('Mark Resolved'),
-                    style: ElevatedButton.styleFrom(backgroundColor: AdminColors.success),
-                  ),
+                Column(
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          ref.read(adminReportProvider.notifier).resolveReport(report.id);
+                          ref.read(officerProfileProvider.notifier).completeTaskLocally(report.id, report.category);
+                          Navigator.pop(ctx);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Task resolved! +${categoryPoints[report.category] ?? 10} points')),
+                          );
+                        },
+                        icon: const Icon(Icons.check_circle_outline, size: 18),
+                        label: const Text('Mark Resolved'),
+                        style: ElevatedButton.styleFrom(backgroundColor: AdminColors.success),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          ref.read(adminReportProvider.notifier).unclaimReport(report.id);
+                          Navigator.pop(ctx);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Task unclaimed')),
+                          );
+                        },
+                        icon: const Icon(Icons.cancel_outlined, size: 18),
+                        label: const Text('Unclaim Task'),
+                      ),
+                    ),
+                  ],
                 ),
               if (report.status == ReportStatus.resolved)
                 Container(

@@ -18,6 +18,10 @@ class AdminReportRepository {
     
     final data = <String, dynamic>{'status': Report.statusToStr(status)};
     if (notes != null) data['admin_notes'] = notes;
+    if (status == ReportStatus.pending) {
+      data['claimed_by'] = null;
+      data['claimed_at'] = null;
+    }
     
     await SupabaseService.client.from('reports').update(data).eq('id', id);
   }
@@ -40,6 +44,16 @@ class AdminReportRepository {
     await SupabaseService.client.from('reports').update({
       'status': Report.statusToStr(ReportStatus.resolved),
       'resolved_at': DateTime.now().toIso8601String(),
+    }).eq('id', id);
+  }
+  
+  static Future<void> unclaimReport(String id) async {
+    if (!SupabaseService.isConfigured) return;
+    
+    await SupabaseService.client.from('reports').update({
+      'status': Report.statusToStr(ReportStatus.pending),
+      'claimed_by': null,
+      'claimed_at': null,
     }).eq('id', id);
   }
 }

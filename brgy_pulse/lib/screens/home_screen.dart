@@ -44,12 +44,25 @@ class HomeScreen extends ConsumerWidget {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  Text(_greeting(), style: tt.bodyMedium),
-                  const SizedBox(height: 2),
-                  Text(AppConstants.barangayName, style: tt.headlineLarge),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(_greeting(), style: tt.bodyMedium),
+                        const SizedBox(height: 2),
+                        Text(AppConstants.barangayName, style: tt.headlineLarge),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.refresh),
+                    onPressed: () {
+                      ref.read(reportProvider.notifier).refresh();
+                      ref.read(announcementProvider.notifier).refresh();
+                    },
+                  ),
                 ],
               ),
             ),

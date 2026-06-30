@@ -35,11 +35,27 @@ class DashboardScreen extends ConsumerWidget {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Command Center', style: tt.headlineLarge),
-                  const SizedBox(height: 2),
-                  Text('Barangay 183', style: tt.bodyMedium),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Command Center', style: tt.headlineLarge),
+                            const SizedBox(height: 2),
+                            Text('Barangay 183', style: tt.bodyMedium),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.refresh),
+                        onPressed: () {
+                          ref.read(adminReportProvider.notifier).refresh();
+                        },
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),

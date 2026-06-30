@@ -39,6 +39,11 @@ class AdminReportNotifier extends Notifier<List<Report>> {
     await AdminReportRepository.resolveReport(id);
     await refresh();
   }
+
+  Future<void> unclaimReport(String id) async {
+    await AdminReportRepository.unclaimReport(id);
+    await refresh();
+  }
 }
 
 final adminReportProvider =

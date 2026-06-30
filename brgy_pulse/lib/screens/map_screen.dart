@@ -175,16 +175,6 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                 urlTemplate: tileUrl,
                 userAgentPackageName: 'com.example.brgy_pulse',
               ),
-              PolygonLayer(
-                polygons: <Polygon<Object>>[
-                  Polygon(
-                    points: boundaryPoints,
-                    color: AppColors.primary.withValues(alpha: 0.06),
-                    borderColor: AppColors.primary.withValues(alpha: 0.4),
-                    borderStrokeWidth: 2,
-                  ),
-                ],
-              ),
               MarkerLayer(markers: markers),
             ],
           ),

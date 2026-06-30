@@ -12,15 +12,15 @@ class BroadcastScreen extends ConsumerStatefulWidget {
 
 class _BroadcastScreenState extends ConsumerState<BroadcastScreen> {
   final _messageController = TextEditingController();
-  final _zoneController = TextEditingController(text: 'All Zones');
+  String _selectedZone = 'All Zones';
   String _severity = 'Advisory';
 
   final _severityOptions = ['Advisory', 'Warning', 'Critical Evacuation'];
+  final _zoneOptions = ['All Zones', 'Zone 1', 'Zone 2', 'Zone 3', 'Zone 4', 'Zone 5'];
 
   @override
   void dispose() {
     _messageController.dispose();
-    _zoneController.dispose();
     super.dispose();
   }
 
@@ -45,7 +45,7 @@ class _BroadcastScreenState extends ConsumerState<BroadcastScreen> {
     ref.read(broadcastProvider.notifier).addBroadcast(
       _messageController.text.trim(),
       _severity,
-      _zoneController.text.trim(),
+      _selectedZone,
     );
     _messageController.clear();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -114,13 +114,20 @@ class _BroadcastScreenState extends ConsumerState<BroadcastScreen> {
             ),
             const SizedBox(height: 14),
 
-            TextField(
-              controller: _zoneController,
+            DropdownButtonFormField<String>(
+              value: _selectedZone,
               style: tt.bodyLarge,
               decoration: const InputDecoration(
                 labelText: 'Target Zone',
                 prefixIcon: Icon(Icons.location_on_outlined, size: 16),
               ),
+              items: _zoneOptions.map((zone) => DropdownMenuItem(
+                value: zone,
+                child: Text(zone),
+              )).toList(),
+              onChanged: (val) {
+                if (val != null) setState(() => _selectedZone = val);
+              },
             ),
             const SizedBox(height: 10),
             TextField(
