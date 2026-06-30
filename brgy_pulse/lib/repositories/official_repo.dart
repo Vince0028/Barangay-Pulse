@@ -7,11 +7,14 @@ class OfficialRepository {
 
     final res = await SupabaseService.client
         .from('officials')
-        .select()
+        .select('*, profiles(full_name)')
         .eq('is_active', true)
         .order('points', ascending: false);
 
-    return (res as List).map((e) => Official.fromJson(e)).toList();
+    return (res as List).map((e) {
+      e['full_name'] = e['profiles']?['full_name'];
+      return Official.fromJson(e);
+    }).toList();
   }
 
   static Future<void> submitRating(String officialId, int rating) async {

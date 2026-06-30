@@ -32,6 +32,12 @@ BEGIN
     COALESCE(NEW.raw_user_meta_data->>'full_name', 'New User'),
     COALESCE(NEW.raw_user_meta_data->>'role', 'civilian')
   );
+  
+  IF COALESCE(NEW.raw_user_meta_data->>'role', 'civilian') = 'admin' THEN
+    INSERT INTO officials (id, role_title, points, missions_completed, is_active)
+    VALUES (NEW.id, 'Barangay Admin', 0, 0, true);
+  END IF;
+
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

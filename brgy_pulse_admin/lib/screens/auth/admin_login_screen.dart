@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/constants.dart';
 import '../../services/supabase_service.dart';
 import '../admin_shell.dart';
+import 'admin_register_screen.dart';
 
 class AdminLoginScreen extends StatefulWidget {
   const AdminLoginScreen({super.key});
@@ -158,8 +159,15 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
 
                 const SizedBox(height: 12),
                 TextButton(
+                  onPressed: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminRegisterScreen()));
+                  },
+                  child: Text('Create an official account', style: tt.bodyMedium?.copyWith(color: AdminColors.primary)),
+                ),
+
+                TextButton(
                   onPressed: _continueAsGuest,
-                  child: Text('Continue as Demo Officer', style: tt.bodyMedium?.copyWith(color: AdminColors.primary)),
+                  child: Text('Continue as Demo Officer', style: tt.bodyMedium?.copyWith(color: context.textSecondary)),
                 ),
               ],
             ),
