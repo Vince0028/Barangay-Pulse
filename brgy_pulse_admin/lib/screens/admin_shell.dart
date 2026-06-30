@@ -1,19 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dashboard_screen.dart';
 import 'admin_map_screen.dart';
 import 'posts_screen.dart';
 import 'broadcast_screen.dart';
 import 'admin_profile_screen.dart';
+import '../providers/admin_provider.dart';
 
-class AdminShell extends StatefulWidget {
+class AdminShell extends ConsumerStatefulWidget {
   const AdminShell({super.key});
 
   @override
-  State<AdminShell> createState() => _AdminShellState();
+  ConsumerState<AdminShell> createState() => _AdminShellState();
 }
 
-class _AdminShellState extends State<AdminShell> {
+class _AdminShellState extends ConsumerState<AdminShell> {
   int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(adminReportProvider.notifier).refresh();
+      ref.read(adminAnnouncementProvider.notifier).refresh();
+      ref.read(broadcastProvider.notifier).refresh();
+      ref.read(officerProfileProvider.notifier).refresh();
+    });
+  }
 
   final _screens = const [
     DashboardScreen(),

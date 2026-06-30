@@ -1,9 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:latlong2/latlong.dart';
 import '../models/report_model.dart';
 import '../models/announcement_model.dart';
 import '../models/official_model.dart';
 import '../core/constants.dart';
+import '../repositories/admin_report_repository.dart';
+import '../repositories/admin_announcement_repo.dart';
+import '../services/supabase_service.dart';
 
 // ──────────────────────────────────────────────
 // Admin report state
@@ -11,38 +13,32 @@ import '../core/constants.dart';
 
 class AdminReportNotifier extends Notifier<List<Report>> {
   @override
-  List<Report> build() => _seedReports;
+  List<Report> build() => [];
 
-  void updateStatus(String id, ReportStatus newStatus) {
-    state = state.map((r) => r.id == id ? r.copyWith(status: newStatus) : r).toList();
+  Future<void> refresh() async {
+    state = await AdminReportRepository.fetchAll();
   }
 
-  void addNotes(String id, String notes) {
-    state = state.map((r) => r.id == id ? r.copyWith(adminNotes: notes) : r).toList();
+  Future<void> updateStatus(String id, ReportStatus newStatus) async {
+    await AdminReportRepository.updateStatus(id, newStatus);
+    await refresh();
   }
 
-  void claimReport(String id, String officerName) {
-    state = state.map((r) => r.id == id
-        ? r.copyWith(status: ReportStatus.inProgress, adminNotes: 'Claimed by $officerName')
-        : r).toList();
+  Future<void> addNotes(String id, String notes) async {
+    final report = state.firstWhere((r) => r.id == id);
+    await AdminReportRepository.updateStatus(id, report.status, notes: notes);
+    await refresh();
   }
 
-  void resolveReport(String id) {
-    state = state.map((r) => r.id == id ? r.copyWith(status: ReportStatus.resolved) : r).toList();
+  Future<void> claimReport(String id, String officerName) async {
+    await AdminReportRepository.claimReport(id);
+    await refresh();
   }
 
-  static final List<Report> _seedReports = [
-    Report(id: 'rpt_001', description: 'Trash bags outside the covered court since Monday. Starting to smell.', category: ReportCategory.trash, location: const LatLng(14.5636, 120.9936), status: ReportStatus.pending, timestamp: DateTime.now().subtract(const Duration(hours: 2)), reportedBy: 'Juan D. (Zone 3)'),
-    Report(id: 'rpt_002', description: 'SUV blocking the fire lane on Estrada St. No hazard lights.', category: ReportCategory.parking, location: const LatLng(14.5648, 120.9948), status: ReportStatus.inProgress, timestamp: DateTime.now().subtract(const Duration(hours: 5)), reportedBy: 'Maria C. (Zone 1)'),
-    Report(id: 'rpt_003', description: 'Karaoke at full volume past 11pm on Leon Guinto St. Third time this week.', category: ReportCategory.noise, location: const LatLng(14.5672, 120.9910), status: ReportStatus.pending, timestamp: DateTime.now().subtract(const Duration(hours: 14)), reportedBy: 'Pedro R. (Zone 2)'),
-    Report(id: 'rpt_004', description: 'Minors at sari-sari store past curfew hours.', category: ReportCategory.curfew, location: const LatLng(14.5610, 120.9955), status: ReportStatus.resolved, timestamp: DateTime.now().subtract(const Duration(days: 1)), reportedBy: 'Ana L. (Zone 4)', adminNotes: 'Tanod dispatched. Parents contacted.'),
-    Report(id: 'rpt_005', description: 'Flood water rising along Quirino Ave underpass. Ankle-deep.', category: ReportCategory.flood, location: const LatLng(14.5690, 120.9890), status: ReportStatus.pending, timestamp: DateTime.now().subtract(const Duration(minutes: 45)), reportedBy: 'Roberto M. (Zone 5)', floodSeverity: 'Medium'),
-    Report(id: 'rpt_006', description: 'Family of 5 stranded on second floor, water rising.', category: ReportCategory.sos, location: const LatLng(14.5625, 120.9900), status: ReportStatus.inProgress, timestamp: DateTime.now().subtract(const Duration(minutes: 20)), reportedBy: 'Gloria S. (Zone 5)'),
-    Report(id: 'rpt_007', description: 'Barangay Hall open as evacuation center. Hot meals available.', category: ReportCategory.safeZone, location: const LatLng(14.5660, 120.9925), status: ReportStatus.resolved, timestamp: DateTime.now().subtract(const Duration(hours: 3)), reportedBy: 'Admin Office'),
-    Report(id: 'rpt_008', description: 'Trash overflowing at community dumpster near daycare.', category: ReportCategory.trash, location: const LatLng(14.5680, 120.9960), status: ReportStatus.pending, timestamp: DateTime.now().subtract(const Duration(hours: 8)), reportedBy: 'Lisa T. (Zone 2)'),
-    Report(id: 'rpt_009', description: 'Motorcycle on sidewalk blocking pedestrians near school.', category: ReportCategory.parking, location: const LatLng(14.5645, 120.9915), status: ReportStatus.pending, timestamp: DateTime.now().subtract(const Duration(hours: 1)), reportedBy: 'Carlos B. (Zone 1)'),
-    Report(id: 'rpt_010', description: 'Construction noise before 6am, violating noise ordinance.', category: ReportCategory.noise, location: const LatLng(14.5665, 120.9945), status: ReportStatus.inProgress, timestamp: DateTime.now().subtract(const Duration(hours: 10)), reportedBy: 'Elena V. (Zone 3)'),
-  ];
+  Future<void> resolveReport(String id) async {
+    await AdminReportRepository.resolveReport(id);
+    await refresh();
+  }
 }
 
 final adminReportProvider =
@@ -70,21 +66,43 @@ final filteredReportsProvider = Provider<List<Report>>((ref) {
 // ──────────────────────────────────────────────
 
 class Broadcast {
+  final String id;
   final String message;
   final String severity;
   final String zone;
   final DateTime timestamp;
-  Broadcast({required this.message, required this.severity, required this.zone, required this.timestamp});
+  Broadcast({required this.id, required this.message, required this.severity, required this.zone, required this.timestamp});
 }
 
 class BroadcastNotifier extends Notifier<List<Broadcast>> {
   @override
-  List<Broadcast> build() => [
-    Broadcast(message: 'Heavy rainfall expected tonight. Secure loose items.', severity: 'Advisory', zone: 'All Zones', timestamp: DateTime.now().subtract(const Duration(hours: 6))),
-  ];
+  List<Broadcast> build() => [];
 
-  void addBroadcast(Broadcast broadcast) {
-    state = [broadcast, ...state];
+  Future<void> refresh() async {
+    if (!SupabaseService.isConfigured) return;
+    final res = await SupabaseService.client
+        .from('broadcasts')
+        .select()
+        .order('created_at', ascending: false);
+        
+    state = (res as List).map((e) => Broadcast(
+      id: e['id'],
+      message: e['message'],
+      severity: e['severity'],
+      zone: e['zone'],
+      timestamp: DateTime.parse(e['created_at']),
+    )).toList();
+  }
+
+  Future<void> addBroadcast(String message, String severity, String zone) async {
+    if (!SupabaseService.isConfigured) return;
+    await SupabaseService.client.from('broadcasts').insert({
+      'message': message,
+      'severity': severity,
+      'zone': zone,
+      'posted_by': SupabaseService.currentUser?.id,
+    });
+    await refresh();
   }
 }
 
@@ -97,17 +115,20 @@ final broadcastProvider =
 
 class AdminAnnouncementNotifier extends Notifier<List<Announcement>> {
   @override
-  List<Announcement> build() => [
-    Announcement(id: 'ann_001', title: 'Water Interruption Notice', body: 'Maynilad maintenance July 1-2. Expect low pressure 10PM-5AM.', postedBy: 'Kap. Reyes', posterRole: 'Barangay Captain', timestamp: DateTime.now().subtract(const Duration(hours: 4))),
-    Announcement(id: 'ann_002', title: 'Free Blood Pressure Screening', body: 'Saturday 8AM-12PM at covered court. Open to 40+.', postedBy: 'Dr. Santos', posterRole: 'Health Officer', timestamp: DateTime.now().subtract(const Duration(days: 1))),
-  ];
+  List<Announcement> build() => [];
 
-  void addAnnouncement(Announcement a) {
-    state = [a, ...state];
+  Future<void> refresh() async {
+    state = await AdminAnnouncementRepository.fetchAll();
   }
 
-  void deleteAnnouncement(String id) {
-    state = state.where((a) => a.id != id).toList();
+  Future<void> addAnnouncement(String title, String body) async {
+    await AdminAnnouncementRepository.create(title, body);
+    await refresh();
+  }
+
+  Future<void> deleteAnnouncement(String id) async {
+    await AdminAnnouncementRepository.delete(id);
+    await refresh();
   }
 }
 
@@ -121,17 +142,38 @@ final adminAnnouncementProvider =
 class OfficerProfileNotifier extends Notifier<Official> {
   @override
   Official build() => Official(
-    id: 'off_current',
-    name: 'Tanod Jun Bautista',
-    role: 'Barangay Tanod',
-    points: 580,
-    missionsCompleted: 45,
-    averageRating: 4.8,
-    ratingsCount: 38,
-    completedReportIds: ['rpt_004', 'rpt_007'],
+    id: SupabaseService.currentUser?.id ?? 'off_current',
+    name: SupabaseService.currentUser?.userMetadata?['full_name'] ?? 'Demo Officer',
+    role: 'Barangay Official',
+    points: 0,
+    missionsCompleted: 0,
+    averageRating: 0.0,
+    ratingsCount: 0,
+    completedReportIds: [],
   );
 
-  void completeTask(String reportId, ReportCategory category) {
+  Future<void> refresh() async {
+    if (!SupabaseService.isConfigured) return;
+    final uid = SupabaseService.currentUser?.id;
+    if (uid == null) return;
+    
+    // Fetch profile and points from official_ratings view
+    final res = await SupabaseService.client.from('official_ratings').select().eq('id', uid).maybeSingle();
+    if (res != null) {
+      state = Official(
+        id: res['id'],
+        name: res['full_name'] ?? state.name,
+        role: res['role_title'] ?? state.role,
+        points: res['points'] ?? 0,
+        missionsCompleted: res['missions_completed'] ?? 0,
+        averageRating: (res['average_rating'] as num?)?.toDouble() ?? 0.0,
+        ratingsCount: res['ratings_count'] ?? 0,
+        completedReportIds: state.completedReportIds, // In a real app we'd query reports claimed by this user that are resolved
+      );
+    }
+  }
+
+  void completeTaskLocally(String reportId, ReportCategory category) {
     final pts = categoryPoints[category] ?? 10;
     state = state.copyWith(
       points: state.points + pts,

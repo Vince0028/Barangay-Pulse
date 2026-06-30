@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/report_model.dart';
-import 'theme.dart';
 
 // ──────────────────────────────────────────────
 // Category visual metadata — Material Icons, no emojis

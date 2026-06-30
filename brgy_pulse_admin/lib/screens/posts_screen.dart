@@ -33,14 +33,8 @@ class _PostsScreenState extends ConsumerState<PostsScreen> {
     if (_titleController.text.trim().isEmpty || _bodyController.text.trim().isEmpty) return;
 
     ref.read(adminAnnouncementProvider.notifier).addAnnouncement(
-      Announcement(
-        id: 'ann_${DateTime.now().millisecondsSinceEpoch}',
-        title: _titleController.text.trim(),
-        body: _bodyController.text.trim(),
-        postedBy: 'Kap. Reyes',
-        posterRole: 'Barangay Captain',
-        timestamp: DateTime.now(),
-      ),
+      _titleController.text.trim(),
+      _bodyController.text.trim(),
     );
 
     _titleController.clear();

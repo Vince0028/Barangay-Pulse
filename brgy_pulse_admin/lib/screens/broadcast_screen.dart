@@ -43,12 +43,9 @@ class _BroadcastScreenState extends ConsumerState<BroadcastScreen> {
   void _sendBroadcast() {
     if (_messageController.text.trim().isEmpty) return;
     ref.read(broadcastProvider.notifier).addBroadcast(
-      Broadcast(
-        message: _messageController.text.trim(),
-        severity: _severity,
-        zone: _zoneController.text.trim(),
-        timestamp: DateTime.now(),
-      ),
+      _messageController.text.trim(),
+      _severity,
+      _zoneController.text.trim(),
     );
     _messageController.clear();
     ScaffoldMessenger.of(context).showSnackBar(

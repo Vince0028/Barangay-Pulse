@@ -173,7 +173,7 @@ class AdminMapScreen extends ConsumerWidget {
                   child: ElevatedButton.icon(
                     onPressed: () {
                       ref.read(adminReportProvider.notifier).resolveReport(report.id);
-                      ref.read(officerProfileProvider.notifier).completeTask(report.id, report.category);
+                      ref.read(officerProfileProvider.notifier).completeTaskLocally(report.id, report.category);
                       Navigator.pop(ctx);
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Task resolved! +${categoryPoints[report.category] ?? 10} points')),

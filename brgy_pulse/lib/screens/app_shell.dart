@@ -1,19 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'home_screen.dart';
 import 'map_screen.dart';
 import 'announcements_screen.dart';
 import 'my_reports_screen.dart';
 import 'profile_screen.dart';
+import '../providers/report_provider.dart';
+import '../providers/announcement_provider.dart';
+import '../providers/official_provider.dart';
 
-class AppShell extends StatefulWidget {
+class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key});
 
   @override
-  State<AppShell> createState() => _AppShellState();
+  ConsumerState<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends State<AppShell> {
+class _AppShellState extends ConsumerState<AppShell> {
   int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(reportProvider.notifier).refresh();
+      ref.read(announcementProvider.notifier).refresh();
+      ref.read(officialProvider.notifier).refresh();
+    });
+  }
 
   final _screens = const [
     HomeScreen(),

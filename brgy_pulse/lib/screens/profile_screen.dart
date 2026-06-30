@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/theme.dart';
+import '../services/supabase_service.dart';
 import '../providers/official_provider.dart';
+import 'auth/login_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -10,6 +12,10 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final officials = ref.watch(officialProvider);
     final tt = Theme.of(context).textTheme;
+    final user = SupabaseService.currentUser;
+    final isLoggedIn = user != null;
+    final displayName = user?.userMetadata?['full_name'] as String? ?? 'Guest User';
+    final displayEmail = user?.email ?? 'Not signed in';
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -24,41 +30,63 @@ class ProfileScreen extends ConsumerWidget {
               child: Column(
                 children: [
                   Container(
-                    width: 72,
-                    height: 72,
+                    width: 72, height: 72,
                     decoration: BoxDecoration(
-                      color: context.cardFill,
+                      color: isLoggedIn
+                          ? AppColors.primary.withValues(alpha: 0.08)
+                          : context.cardFill,
                       shape: BoxShape.circle,
                       border: Border.all(color: context.border, width: 2),
                     ),
-                    child: Icon(Icons.person_rounded, size: 36, color: context.textMuted),
+                    child: Icon(
+                      isLoggedIn ? Icons.person_rounded : Icons.person_outline_rounded,
+                      size: 36,
+                      color: isLoggedIn ? AppColors.primary : context.textMuted,
+                    ),
                   ),
                   const SizedBox(height: 12),
-                  Text('Guest User', style: tt.headlineSmall),
+                  Text(displayName, style: tt.headlineSmall),
                   const SizedBox(height: 2),
-                  Text('Not signed in', style: tt.bodyMedium),
+                  Text(displayEmail, style: tt.bodyMedium),
                 ],
               ),
             ),
             const SizedBox(height: 20),
 
             // Auth buttons
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {},
-                child: const Text('Sign In'),
+            if (!isLoggedIn) ...[
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const LoginScreen()));
+                  },
+                  child: const Text('Sign In'),
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                onPressed: () {},
-                child: const Text('Create Account'),
+              const SizedBox(height: 8),
+            ] else ...[
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () async {
+                    await SupabaseService.signOut();
+                    if (context.mounted) {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (_) => const LoginScreen()),
+                        (route) => false,
+                      );
+                    }
+                  },
+                  child: const Text('Sign Out'),
+                ),
               ),
-            ),
-            const SizedBox(height: 28),
+              const SizedBox(height: 8),
+            ],
+
+            const SizedBox(height: 20),
 
             // Officials section
             Text('Barangay Officials', style: tt.headlineSmall),
@@ -77,14 +105,12 @@ class ProfileScreen extends ConsumerWidget {
                         child: Row(
                           children: [
                             Container(
-                              width: 40,
-                              height: 40,
+                              width: 40, height: 40,
                               decoration: BoxDecoration(
                                 color: AppColors.primary.withValues(alpha: 0.08),
                                 borderRadius: BorderRadius.circular(AppTheme.r),
                               ),
-                              child: Icon(Icons.badge_outlined,
-                                  size: 20, color: AppColors.primary),
+                              child: Icon(Icons.badge_outlined, size: 20, color: AppColors.primary),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
@@ -102,15 +128,12 @@ class ProfileScreen extends ConsumerWidget {
                                 Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(Icons.star_rounded,
-                                        size: 14, color: AppColors.warning),
+                                    Icon(Icons.star_rounded, size: 14, color: AppColors.warning),
                                     const SizedBox(width: 2),
-                                    Text(o.averageRating.toStringAsFixed(1),
-                                        style: tt.titleMedium),
+                                    Text(o.averageRating.toStringAsFixed(1), style: tt.titleMedium),
                                   ],
                                 ),
-                                Text('${o.missionsCompleted} tasks done',
-                                    style: tt.bodySmall),
+                                Text('${o.missionsCompleted} tasks done', style: tt.bodySmall),
                               ],
                             ),
                           ],
@@ -122,7 +145,6 @@ class ProfileScreen extends ConsumerWidget {
 
             const SizedBox(height: 24),
 
-            // Settings
             Text('Settings', style: tt.headlineSmall),
             const SizedBox(height: 12),
             _Tile(icon: Icons.notifications_outlined, label: 'Notifications',
@@ -148,14 +170,13 @@ class ProfileScreen extends ConsumerWidget {
             final tt = Theme.of(ctx).textTheme;
             return Container(
               decoration: BoxDecoration(
-                color: ctx.mounted ? Theme.of(ctx).bottomSheetTheme.backgroundColor : Colors.white,
+                color: Theme.of(ctx).bottomSheetTheme.backgroundColor,
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
               ),
               padding: const EdgeInsets.all(20),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Drag handle
                   Container(
                     width: 36, height: 4,
                     decoration: BoxDecoration(
@@ -175,8 +196,7 @@ class ProfileScreen extends ConsumerWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 4),
                           child: Icon(
                             i < rating ? Icons.star_rounded : Icons.star_outline_rounded,
-                            size: 36,
-                            color: AppColors.warning,
+                            size: 36, color: AppColors.warning,
                           ),
                         ),
                       );

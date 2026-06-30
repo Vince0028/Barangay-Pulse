@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/constants.dart';
+import '../services/supabase_service.dart';
 import '../providers/admin_provider.dart';
+import 'auth/admin_login_screen.dart';
 
 class AdminProfileScreen extends ConsumerWidget {
   const AdminProfileScreen({super.key});
@@ -12,6 +14,8 @@ class AdminProfileScreen extends ConsumerWidget {
     final allReports = ref.watch(adminReportProvider);
     final resolved = allReports.where((r) => officer.completedReportIds.contains(r.id)).toList();
     final tt = Theme.of(context).textTheme;
+    final user = SupabaseService.currentUser;
+    final isLoggedIn = user != null;
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -21,7 +25,6 @@ class AdminProfileScreen extends ConsumerWidget {
           children: [
             const SizedBox(height: 24),
 
-            // Profile card
             Center(
               child: Column(
                 children: [
@@ -35,9 +38,14 @@ class AdminProfileScreen extends ConsumerWidget {
                     child: Icon(Icons.badge_rounded, size: 36, color: AdminColors.primary),
                   ),
                   const SizedBox(height: 12),
-                  Text(officer.name, style: tt.headlineSmall),
+                  Text(isLoggedIn ? (user.userMetadata?['full_name'] ?? officer.name) : officer.name,
+                      style: tt.headlineSmall),
                   const SizedBox(height: 2),
                   Text(officer.role, style: tt.bodyMedium),
+                  if (isLoggedIn) ...[
+                    const SizedBox(height: 2),
+                    Text(user.email ?? '', style: tt.bodySmall),
+                  ],
                   const SizedBox(height: 6),
                   Row(
                     mainAxisSize: MainAxisSize.min,
@@ -53,7 +61,6 @@ class AdminProfileScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
 
-            // Stats
             Row(
               children: [
                 _StatCard(label: 'Points', value: '${officer.points}', color: AdminColors.primary),
@@ -65,7 +72,6 @@ class AdminProfileScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
 
-            // Leaderboard
             Text('Top Officers', style: tt.headlineSmall),
             const SizedBox(height: 8),
             _LeaderRow(rank: 1, name: 'Tanod Jun Bautista', pts: 580),
@@ -74,7 +80,6 @@ class AdminProfileScreen extends ConsumerWidget {
 
             const SizedBox(height: 24),
 
-            // Completed missions
             Row(
               children: [
                 Text('Completed Tasks', style: tt.headlineSmall),
@@ -88,9 +93,7 @@ class AdminProfileScreen extends ConsumerWidget {
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(20),
-                  child: Center(
-                    child: Text('Complete tasks from the map to earn points.', style: tt.bodyMedium),
-                  ),
+                  child: Center(child: Text('Complete tasks from the map to earn points.', style: tt.bodyMedium)),
                 ),
               )
             else
@@ -106,9 +109,7 @@ class AdminProfileScreen extends ConsumerWidget {
                           Container(
                             width: 32, height: 32,
                             decoration: BoxDecoration(
-                              color: meta.bgColor,
-                              borderRadius: BorderRadius.circular(kRadius),
-                            ),
+                              color: meta.bgColor, borderRadius: BorderRadius.circular(kRadius)),
                             child: Icon(meta.icon, color: meta.color, size: 16),
                           ),
                           const SizedBox(width: 10),
@@ -117,8 +118,7 @@ class AdminProfileScreen extends ConsumerWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(meta.label, style: tt.titleMedium),
-                                Text(r.description, style: tt.bodySmall,
-                                    maxLines: 1, overflow: TextOverflow.ellipsis),
+                                Text(r.description, style: tt.bodySmall, maxLines: 1, overflow: TextOverflow.ellipsis),
                               ],
                             ),
                           ),
@@ -129,11 +129,7 @@ class AdminProfileScreen extends ConsumerWidget {
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text('+${categoryPoints[r.category] ?? 10} pts',
-                                style: tt.bodySmall?.copyWith(
-                                  color: AdminColors.success,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 10,
-                                )),
+                                style: tt.bodySmall?.copyWith(color: AdminColors.success, fontWeight: FontWeight.w600, fontSize: 10)),
                           ),
                         ],
                       ),
@@ -144,15 +140,30 @@ class AdminProfileScreen extends ConsumerWidget {
 
             const SizedBox(height: 24),
 
-            // Sign in / settings
             Text('Account', style: tt.headlineSmall),
             const SizedBox(height: 8),
             SizedBox(
               width: double.infinity,
-              child: OutlinedButton(
-                onPressed: () {},
-                child: const Text('Sign In'),
-              ),
+              child: isLoggedIn
+                  ? OutlinedButton(
+                      onPressed: () async {
+                        await SupabaseService.signOut();
+                        if (context.mounted) {
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(builder: (_) => const AdminLoginScreen()),
+                            (route) => false,
+                          );
+                        }
+                      },
+                      child: const Text('Sign Out'),
+                    )
+                  : OutlinedButton(
+                      onPressed: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminLoginScreen()));
+                      },
+                      child: const Text('Sign In'),
+                    ),
             ),
             const SizedBox(height: 32),
           ],
@@ -174,13 +185,11 @@ class _StatCard extends StatelessWidget {
       child: Card(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-          child: Column(
-            children: [
-              Text(value, style: tt.headlineMedium?.copyWith(color: color, fontWeight: FontWeight.w700)),
-              const SizedBox(height: 2),
-              Text(label, style: tt.bodySmall),
-            ],
-          ),
+          child: Column(children: [
+            Text(value, style: tt.headlineMedium?.copyWith(color: color, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 2),
+            Text(label, style: tt.bodySmall),
+          ]),
         ),
       ),
     );
@@ -203,14 +212,12 @@ class _LeaderRow extends StatelessWidget {
       child: Card(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          child: Row(
-            children: [
-              Icon(medal, size: 20, color: color),
-              const SizedBox(width: 10),
-              Expanded(child: Text(name, style: tt.titleMedium)),
-              Text('$pts pts', style: tt.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
-            ],
-          ),
+          child: Row(children: [
+            Icon(medal, size: 20, color: color),
+            const SizedBox(width: 10),
+            Expanded(child: Text(name, style: tt.titleMedium)),
+            Text('$pts pts', style: tt.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
+          ]),
         ),
       ),
     );

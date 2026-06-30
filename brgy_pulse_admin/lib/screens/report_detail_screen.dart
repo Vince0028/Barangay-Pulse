@@ -126,7 +126,7 @@ class _ReportDetailScreenState extends ConsumerState<ReportDetailScreen> {
                       }
                       ref.read(adminReportProvider.notifier).updateStatus(report.id, s);
                       if (s == ReportStatus.resolved) {
-                        ref.read(officerProfileProvider.notifier).completeTask(report.id, report.category);
+                        ref.read(officerProfileProvider.notifier).completeTaskLocally(report.id, report.category);
                       }
                     },
                     child: Container(

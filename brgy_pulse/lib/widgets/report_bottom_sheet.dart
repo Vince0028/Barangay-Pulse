@@ -7,7 +7,8 @@ import '../models/report_model.dart';
 import '../providers/report_provider.dart';
 
 class ReportBottomSheet extends ConsumerStatefulWidget {
-  const ReportBottomSheet({super.key});
+  final LatLng? location;
+  const ReportBottomSheet({super.key, this.location});
 
   @override
   ConsumerState<ReportBottomSheet> createState() => _ReportBottomSheetState();
@@ -25,13 +26,16 @@ class _ReportBottomSheetState extends ConsumerState<ReportBottomSheet> {
   }
 
   void _submit() {
+    final loc = widget.location ??
+        const LatLng(AppConstants.mapCenterLat, AppConstants.mapCenterLng);
+
     final report = Report(
       id: 'rpt_${DateTime.now().millisecondsSinceEpoch}',
       description: _descriptionController.text.isNotEmpty
           ? _descriptionController.text
           : AppConstants.categoryMeta[_selectedCategory]!.label,
       category: _selectedCategory,
-      location: const LatLng(AppConstants.mapCenterLat, AppConstants.mapCenterLng),
+      location: loc,
       status: ReportStatus.pending,
       timestamp: DateTime.now(),
       reportedBy: 'demo_user',
@@ -50,6 +54,7 @@ class _ReportBottomSheetState extends ConsumerState<ReportBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final loc = widget.location;
 
     return Container(
       decoration: BoxDecoration(
@@ -65,7 +70,6 @@ class _ReportBottomSheetState extends ConsumerState<ReportBottomSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Drag handle
             Center(
               child: Container(
                 width: 36, height: 4,
@@ -80,7 +84,31 @@ class _ReportBottomSheetState extends ConsumerState<ReportBottomSheet> {
             Text('Report an Issue', style: tt.headlineSmall),
             const SizedBox(height: 2),
             Text('This will be sent to ${AppConstants.barangayName}.', style: tt.bodyMedium),
-            const SizedBox(height: 16),
+
+            // Show selected coordinates
+            if (loc != null) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(AppTheme.r),
+                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.15)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.location_on_rounded, size: 14, color: AppColors.primary),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${loc.latitude.toStringAsFixed(6)}, ${loc.longitude.toStringAsFixed(6)}',
+                      style: tt.bodySmall?.copyWith(color: AppColors.primary, fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
+            const SizedBox(height: 14),
 
             // Category chips
             Text('Category', style: tt.labelLarge),

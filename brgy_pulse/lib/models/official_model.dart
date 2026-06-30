@@ -36,4 +36,16 @@ class Official {
       ratingsCount: ratingsCount ?? this.ratingsCount,
     );
   }
+
+  factory Official.fromJson(Map<String, dynamic> json) {
+    return Official(
+      id: json['id'] as String,
+      name: json['full_name'] as String? ?? 'Official',
+      role: json['role_title'] as String? ?? '',
+      points: (json['points'] as num?)?.toInt() ?? 0,
+      missionsCompleted: (json['missions_completed'] as num?)?.toInt() ?? 0,
+      averageRating: (json['average_rating'] as num?)?.toDouble() ?? 0.0,
+      ratingsCount: (json['ratings_count'] as num?)?.toInt() ?? 0,
+    );
+  }
 }
