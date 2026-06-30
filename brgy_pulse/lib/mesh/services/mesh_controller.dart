@@ -114,6 +114,19 @@ class MeshController extends ChangeNotifier {
     await _getDeviceModel();
 
     try {
+      // 1. Check and request location permissions
+      if (!await Nearby().checkLocationPermission()) {
+        await Nearby().askLocationPermission();
+      }
+      // 2. Check and request location services enabled
+      if (!await Nearby().checkLocationEnabled()) {
+        await Nearby().enableLocationServices();
+      }
+      // 3. Check and request Bluetooth permissions (needed for Android 12+)
+      if (!await Nearby().checkBluetoothPermission()) {
+        Nearby().askBluetoothPermission(); // Note: askBluetoothPermission is void in some package versions
+      }
+
       // Start advertising ("I'm here")
       await Nearby().startAdvertising(
         username,
