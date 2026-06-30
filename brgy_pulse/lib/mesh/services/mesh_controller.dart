@@ -8,6 +8,7 @@ import 'package:uuid/uuid.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import '../models/mesh_message.dart';
 import 'mesh_storage.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 /// Packet types for the mesh protocol
 enum MeshPacketType {
@@ -115,16 +116,22 @@ class MeshController extends ChangeNotifier {
 
     try {
       // 1. Check and request location permissions
-      if (!await Nearby().checkLocationPermission()) {
-        await Nearby().askLocationPermission();
+      if (await Permission.location.isDenied) {
+        await Permission.location.request();
       }
-      // 2. Check and request location services enabled
-      if (!await Nearby().checkLocationEnabled()) {
-        await Nearby().enableLocationServices();
+      
+      // 2. Check and request Bluetooth permissions (needed for Android 12+)
+      if (await Permission.bluetooth.isDenied) {
+        await Permission.bluetooth.request();
       }
-      // 3. Check and request Bluetooth permissions (needed for Android 12+)
-      if (!await Nearby().checkBluetoothPermission()) {
-        Nearby().askBluetoothPermission(); // Note: askBluetoothPermission is void in some package versions
+      if (await Permission.bluetoothAdvertise.isDenied) {
+        await Permission.bluetoothAdvertise.request();
+      }
+      if (await Permission.bluetoothConnect.isDenied) {
+        await Permission.bluetoothConnect.request();
+      }
+      if (await Permission.bluetoothScan.isDenied) {
+        await Permission.bluetoothScan.request();
       }
 
       // Start advertising ("I'm here")
