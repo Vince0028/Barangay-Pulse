@@ -1,8 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // Manual Hive TypeAdapter for MeshMessage
 
-import 'package:hive/hive.dart';
-
 part of 'mesh_message.dart';
 
 class MeshMessageAdapter extends TypeAdapter<MeshMessage> {
