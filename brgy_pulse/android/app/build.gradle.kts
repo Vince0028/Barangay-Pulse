@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.example.brgy_pulse"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
