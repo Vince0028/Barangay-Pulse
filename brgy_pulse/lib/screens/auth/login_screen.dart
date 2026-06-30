@@ -110,14 +110,7 @@ class _LoginScreenState extends State<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Center(
-                  child: Container(
-                    width: 64, height: 64,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(AppTheme.r),
-                    ),
-                    child: const Icon(Icons.location_city_rounded, size: 32, color: AppColors.primary),
-                  ),
+                  child: Image.asset('assets/logo.png', width: 140, height: 140, fit: BoxFit.contain),
                 ),
                 const SizedBox(height: 20),
                 Text('BrgyPulse', style: tt.headlineLarge, textAlign: TextAlign.center),

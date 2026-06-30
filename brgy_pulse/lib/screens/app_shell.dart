@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'home_screen.dart';
 import 'map_screen.dart';
 import 'announcements_screen.dart';
+import 'mesh_chat_screen.dart';
 import 'my_reports_screen.dart';
 import 'profile_screen.dart';
 import '../providers/report_provider.dart';
@@ -33,6 +34,7 @@ class _AppShellState extends ConsumerState<AppShell> {
     HomeScreen(),
     MapScreen(),
     AnnouncementsScreen(),
+    MeshChatScreen(),
     MyReportsScreen(),
     ProfileScreen(),
   ];
@@ -62,6 +64,11 @@ class _AppShellState extends ConsumerState<AppShell> {
             icon: Icon(Icons.campaign_outlined),
             selectedIcon: Icon(Icons.campaign_rounded),
             label: 'News',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.cell_tower_outlined),
+            selectedIcon: Icon(Icons.cell_tower_rounded),
+            label: 'Chat',
           ),
           NavigationDestination(
             icon: Icon(Icons.assignment_outlined),

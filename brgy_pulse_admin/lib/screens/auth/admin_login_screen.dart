@@ -73,14 +73,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Center(
-                  child: Container(
-                    width: 64, height: 64,
-                    decoration: BoxDecoration(
-                      color: AdminColors.primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(kRadius),
-                    ),
-                    child: Icon(Icons.admin_panel_settings_rounded, size: 32, color: AdminColors.primary),
-                  ),
+                  child: Image.asset('assets/logo.png', width: 140, height: 140, fit: BoxFit.contain),
                 ),
                 const SizedBox(height: 20),
                 Text('BrgyPulse Admin', style: tt.headlineLarge, textAlign: TextAlign.center),

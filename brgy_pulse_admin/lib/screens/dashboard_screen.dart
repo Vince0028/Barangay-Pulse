@@ -38,6 +38,8 @@ class DashboardScreen extends ConsumerWidget {
                 children: [
                   Row(
                     children: [
+                      Image.asset('assets/logo.png', width: 56, height: 56),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

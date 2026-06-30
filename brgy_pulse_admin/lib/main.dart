@@ -5,10 +5,12 @@ import 'core/constants.dart';
 import 'services/supabase_service.dart';
 import 'screens/admin_shell.dart';
 import 'screens/auth/admin_login_screen.dart';
+import 'mesh/services/mesh_storage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SupabaseService.initialize();
+  await MeshStorage.initialize();
 
   runApp(
     const ProviderScope(

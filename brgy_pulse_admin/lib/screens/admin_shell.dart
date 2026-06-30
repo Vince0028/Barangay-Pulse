@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dashboard_screen.dart';
 import 'admin_map_screen.dart';
 import 'posts_screen.dart';
+import 'mesh_chat_screen.dart';
 import 'broadcast_screen.dart';
 import 'admin_profile_screen.dart';
 import '../providers/admin_provider.dart';
@@ -32,6 +33,7 @@ class _AdminShellState extends ConsumerState<AdminShell> {
     DashboardScreen(),
     AdminMapScreen(),
     PostsScreen(),
+    AdminMeshChatScreen(),
     BroadcastScreen(),
     AdminProfileScreen(),
   ];
@@ -61,6 +63,11 @@ class _AdminShellState extends ConsumerState<AdminShell> {
             icon: Icon(Icons.edit_note_outlined),
             selectedIcon: Icon(Icons.edit_note_rounded),
             label: 'Posts',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.cell_tower_outlined),
+            selectedIcon: Icon(Icons.cell_tower_rounded),
+            label: 'Chat',
           ),
           NavigationDestination(
             icon: Icon(Icons.campaign_outlined),
