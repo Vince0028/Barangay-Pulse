@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:math';
 import '../core/constants.dart';
 import '../core/theme.dart';
 import '../providers/report_provider.dart';
@@ -16,9 +17,24 @@ class MapScreen extends ConsumerStatefulWidget {
 
 class _MapScreenState extends ConsumerState<MapScreen> {
   final MapController _mapController = MapController();
+  bool _cleanMode = false; // toggles simplified tiles
 
-  // Default center: Taft Avenue area, Manila
-  static const _center = LatLng(14.5650, 120.9930);
+  static const _center = LatLng(
+    AppConstants.mapCenterLat,
+    AppConstants.mapCenterLng,
+  );
+
+  // Generate circle points for barangay boundary
+  List<LatLng> _buildCircle(LatLng center, double radiusMeters, int points) {
+    final result = <LatLng>[];
+    for (int i = 0; i < points; i++) {
+      final angle = (2 * pi * i) / points;
+      final dLat = (radiusMeters / 111320) * cos(angle);
+      final dLng = (radiusMeters / (111320 * cos(center.latitude * pi / 180))) * sin(angle);
+      result.add(LatLng(center.latitude + dLat, center.longitude + dLng));
+    }
+    return result;
+  }
 
   void _showReportBottomSheet() {
     showModalBottomSheet(
@@ -32,31 +48,30 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   @override
   Widget build(BuildContext context) {
     final reports = ref.watch(reportProvider);
+    final tt = Theme.of(context).textTheme;
 
-    // Build markers from report data
+    final boundaryPoints = _buildCircle(_center, AppConstants.barangayRadiusMeters, 64);
+
     final markers = reports.map((report) {
       final meta = AppConstants.categoryMeta[report.category]!;
       return Marker(
         point: report.location,
-        width: 36,
-        height: 36,
+        width: 32,
+        height: 32,
         child: Container(
           decoration: BoxDecoration(
             color: meta.color,
             shape: BoxShape.circle,
             border: Border.all(color: Colors.white, width: 2),
-            boxShadow: [
-              BoxShadow(
-                color: meta.color.withValues(alpha: 0.4),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
           ),
-          child: Icon(meta.icon, color: Colors.white, size: 16),
+          child: Icon(meta.icon, color: Colors.white, size: 14),
         ),
       );
     }).toList();
+
+    final tileUrl = _cleanMode
+        ? 'https://basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png'
+        : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
     return SafeArea(
       child: Stack(
@@ -66,72 +81,124 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             mapController: _mapController,
             options: MapOptions(
               initialCenter: _center,
-              initialZoom: 15.0,
+              initialZoom: 15.5,
             ),
             children: [
               TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                urlTemplate: tileUrl,
                 userAgentPackageName: 'com.example.brgy_pulse',
               ),
+              // Barangay boundary
+              PolygonLayer(
+                polygons: <Polygon<Object>>[
+                  Polygon(
+                    points: boundaryPoints,
+                    color: AppColors.primary.withValues(alpha: 0.06),
+                    borderColor: AppColors.primary.withValues(alpha: 0.4),
+                    borderStrokeWidth: 2,
+                  ),
+                ],
+              ),
+              // Report markers
               MarkerLayer(markers: markers),
             ],
           ),
 
-          // Top bar overlay
+          // Top bar
           Positioned(
             top: 0,
             left: 0,
             right: 0,
             child: Container(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    AppColors.background.withValues(alpha: 0.9),
-                    AppColors.background.withValues(alpha: 0.0),
-                  ],
-                ),
+                color: context.surface.withValues(alpha: 0.92),
               ),
               child: Row(
                 children: [
-                  Text(
-                    'Live Map',
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
+                  Text(AppConstants.barangayName, style: tt.headlineSmall),
                   const Spacer(),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: AppColors.success.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                          color: AppColors.success.withValues(alpha: 0.3)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 6,
-                          height: 6,
-                          decoration: const BoxDecoration(
-                            color: AppColors.success,
-                            shape: BoxShape.circle,
+                  // POI toggle
+                  GestureDetector(
+                    onTap: () => setState(() => _cleanMode = !_cleanMode),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: _cleanMode
+                            ? AppColors.primary.withValues(alpha: 0.1)
+                            : context.cardFill,
+                        borderRadius: BorderRadius.circular(AppTheme.r),
+                        border: Border.all(
+                          color: _cleanMode
+                              ? AppColors.primary.withValues(alpha: 0.3)
+                              : context.border,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _cleanMode ? Icons.layers_clear_rounded : Icons.layers_rounded,
+                            size: 14,
+                            color: _cleanMode ? AppColors.primary : context.textMuted,
                           ),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          '${reports.length} Active',
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: AppColors.success,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                        ),
-                      ],
+                          const SizedBox(width: 4),
+                          Text(
+                            _cleanMode ? 'Focus' : 'Full',
+                            style: tt.bodySmall?.copyWith(
+                              color: _cleanMode ? AppColors.primary : context.textSecondary,
+                              fontWeight: _cleanMode ? FontWeight.w600 : FontWeight.w400,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Active count
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: context.cardFill,
+                      borderRadius: BorderRadius.circular(AppTheme.r),
+                      border: Border.all(color: context.border),
+                    ),
+                    child: Text('${reports.length} reports', style: tt.bodySmall),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Location prompt banner
+          Positioned(
+            top: 44,
+            left: 16,
+            right: 16,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(AppTheme.r),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.15)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.location_on_outlined, size: 16, color: AppColors.primary),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text('Enable location for accurate reporting',
+                        style: tt.bodySmall?.copyWith(color: AppColors.primary)),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      // TODO: geolocator permission request
+                    },
+                    child: Text('Enable',
+                        style: tt.bodySmall?.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        )),
                   ),
                 ],
               ),
@@ -144,11 +211,12 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             right: 16,
             child: FloatingActionButton.extended(
               onPressed: _showReportBottomSheet,
-              icon: const Icon(Icons.add_location_alt_rounded, size: 20),
+              icon: const Icon(Icons.add_location_alt_rounded, size: 18),
               label: const Text('Report'),
               backgroundColor: AppColors.danger,
               foregroundColor: Colors.white,
-              elevation: 3,
+              elevation: 2,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.r)),
             ),
           ),
         ],

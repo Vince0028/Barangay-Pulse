@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dashboard_screen.dart';
 import 'admin_map_screen.dart';
+import 'posts_screen.dart';
 import 'broadcast_screen.dart';
+import 'admin_profile_screen.dart';
 
 class AdminShell extends StatefulWidget {
   const AdminShell({super.key});
@@ -16,7 +18,9 @@ class _AdminShellState extends State<AdminShell> {
   final _screens = const [
     DashboardScreen(),
     AdminMapScreen(),
+    PostsScreen(),
     BroadcastScreen(),
+    AdminProfileScreen(),
   ];
 
   @override
@@ -38,12 +42,22 @@ class _AdminShellState extends State<AdminShell> {
           NavigationDestination(
             icon: Icon(Icons.map_outlined),
             selectedIcon: Icon(Icons.map_rounded),
-            label: 'Map View',
+            label: 'Map',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.edit_note_outlined),
+            selectedIcon: Icon(Icons.edit_note_rounded),
+            label: 'Posts',
           ),
           NavigationDestination(
             icon: Icon(Icons.campaign_outlined),
             selectedIcon: Icon(Icons.campaign_rounded),
             label: 'Broadcast',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.badge_outlined),
+            selectedIcon: Icon(Icons.badge_rounded),
+            label: 'Profile',
           ),
         ],
       ),

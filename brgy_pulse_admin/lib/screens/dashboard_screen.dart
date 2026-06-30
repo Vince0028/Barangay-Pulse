@@ -24,7 +24,6 @@ class DashboardScreen extends ConsumerWidget {
 
     final pending = allReports.where((r) => r.status == ReportStatus.pending).length;
     final inProgress = allReports.where((r) => r.status == ReportStatus.inProgress).length;
-    final resolved = allReports.where((r) => r.status == ReportStatus.resolved).length;
     final emergencies = allReports.where((r) =>
         (r.category == ReportCategory.sos || r.category == ReportCategory.flood) &&
         r.status != ReportStatus.resolved).length;
@@ -32,7 +31,6 @@ class DashboardScreen extends ConsumerWidget {
     return SafeArea(
       child: CustomScrollView(
         slivers: [
-          // Header
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
@@ -41,58 +39,53 @@ class DashboardScreen extends ConsumerWidget {
                 children: [
                   Text('Command Center', style: tt.headlineLarge),
                   const SizedBox(height: 2),
-                  Text('Barangay 201, Manila', style: tt.bodyMedium),
+                  Text('Barangay 183', style: tt.bodyMedium),
                 ],
               ),
             ),
           ),
 
-          // KPI Cards
+          // KPI row
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
               child: Row(
                 children: [
-                  _KpiCard(count: allReports.length, label: 'Total', color: AdminColors.primary),
+                  _Kpi(count: allReports.length, label: 'Total', color: AdminColors.primary),
                   const SizedBox(width: 8),
-                  _KpiCard(count: pending, label: 'Pending', color: AdminColors.warning),
+                  _Kpi(count: pending, label: 'Pending', color: AdminColors.warning),
                   const SizedBox(width: 8),
-                  _KpiCard(count: inProgress, label: 'Active', color: AdminColors.primary),
+                  _Kpi(count: inProgress, label: 'Active', color: AdminColors.primary),
                   const SizedBox(width: 8),
-                  _KpiCard(count: emergencies, label: 'Emergency', color: AdminColors.danger),
+                  _Kpi(count: emergencies, label: 'Emergency', color: AdminColors.danger),
                 ],
               ),
             ),
           ),
 
-          // Category filter chips
+          // Category filter
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
-              child: Text('Filter by Category', style: tt.titleMedium),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+              child: Text('Filter', style: tt.labelLarge),
             ),
           ),
           SliverToBoxAdapter(
             child: SizedBox(
-              height: 40,
+              height: 34,
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 children: [
-                  _FilterChip(
-                    label: 'All',
-                    selected: activeFilter == null,
-                    onTap: () => ref.read(categoryFilterProvider.notifier).set(null),
-                  ),
+                  _Chip(label: 'All', selected: activeFilter == null,
+                      onTap: () => ref.read(categoryFilterProvider.notifier).set(null)),
                   const SizedBox(width: 6),
                   ...ReportCategory.values.map((cat) {
                     final meta = categoryMeta[cat]!;
                     return Padding(
                       padding: const EdgeInsets.only(right: 6),
-                      child: _FilterChip(
-                        label: meta.label,
-                        icon: meta.icon,
-                        color: meta.color,
+                      child: _Chip(
+                        label: meta.label, icon: meta.icon, color: meta.color,
                         selected: activeFilter == cat,
                         onTap: () => ref.read(categoryFilterProvider.notifier).set(cat),
                       ),
@@ -103,16 +96,15 @@ class DashboardScreen extends ConsumerWidget {
             ),
           ),
 
-          // Section header
+          // Reports header
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 6),
               child: Row(
                 children: [
                   Text('Reports', style: tt.headlineSmall),
                   const Spacer(),
-                  Text('${filteredReports.length} total',
-                      style: tt.bodySmall),
+                  Text('${filteredReports.length} total', style: tt.bodySmall),
                 ],
               ),
             ),
@@ -122,37 +114,31 @@ class DashboardScreen extends ConsumerWidget {
           SliverList(
             delegate: SliverChildBuilderDelegate(
               (context, index) {
-                final report = filteredReports[index];
-                final meta = categoryMeta[report.category]!;
-                final sMeta = statusMeta[report.status]!;
+                final r = filteredReports[index];
+                final meta = categoryMeta[r.category]!;
+                final sMeta = statusMeta[r.status]!;
 
                 return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ReportDetailScreen(reportId: report.id),
-                      ),
-                    );
-                  },
+                  onTap: () => Navigator.push(context, MaterialPageRoute(
+                    builder: (_) => ReportDetailScreen(reportId: r.id),
+                  )),
                   child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                    margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 3),
                     child: Card(
                       child: Padding(
-                        padding: const EdgeInsets.all(14),
+                        padding: const EdgeInsets.all(12),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Container(
-                              width: 40,
-                              height: 40,
+                              width: 36, height: 36,
                               decoration: BoxDecoration(
                                 color: meta.bgColor,
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(kRadius),
                               ),
-                              child: Icon(meta.icon, color: meta.color, size: 20),
+                              child: Icon(meta.icon, color: meta.color, size: 18),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 10),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -161,42 +147,38 @@ class DashboardScreen extends ConsumerWidget {
                                     children: [
                                       Expanded(child: Text(meta.label, style: tt.titleMedium)),
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                         decoration: BoxDecoration(
-                                          color: sMeta.color.withValues(alpha: 0.12),
-                                          borderRadius: BorderRadius.circular(6),
+                                          color: sMeta.color.withValues(alpha: 0.1),
+                                          borderRadius: BorderRadius.circular(4),
                                         ),
-                                        child: Text(
-                                          sMeta.label,
-                                          style: tt.bodySmall?.copyWith(
-                                            color: sMeta.color,
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 11,
-                                          ),
-                                        ),
+                                        child: Text(sMeta.label,
+                                            style: tt.bodySmall?.copyWith(
+                                              color: sMeta.color,
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 10,
+                                            )),
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(report.description, style: tt.bodyMedium,
+                                  const SizedBox(height: 3),
+                                  Text(r.description, style: tt.bodyMedium,
                                       maxLines: 2, overflow: TextOverflow.ellipsis),
-                                  const SizedBox(height: 6),
+                                  const SizedBox(height: 5),
                                   Row(
                                     children: [
-                                      Icon(Icons.person_outline, size: 13, color: AdminColors.textMuted),
-                                      const SizedBox(width: 4),
-                                      Text(report.reportedBy, style: tt.bodySmall),
+                                      Icon(Icons.person_outline, size: 12, color: context.textMuted),
+                                      const SizedBox(width: 3),
+                                      Text(r.reportedBy, style: tt.bodySmall),
                                       const Spacer(),
-                                      Icon(Icons.access_time, size: 13, color: AdminColors.textMuted),
-                                      const SizedBox(width: 4),
-                                      Text(_timeAgo(report.timestamp), style: tt.bodySmall),
+                                      Text(_timeAgo(r.timestamp), style: tt.bodySmall),
                                     ],
                                   ),
                                 ],
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            Icon(Icons.chevron_right_rounded, color: AdminColors.textMuted, size: 20),
+                            const SizedBox(width: 6),
+                            Icon(Icons.chevron_right_rounded, color: context.textMuted, size: 18),
                           ],
                         ),
                       ),
@@ -207,22 +189,18 @@ class DashboardScreen extends ConsumerWidget {
               childCount: filteredReports.length,
             ),
           ),
-
-          const SliverToBoxAdapter(child: SizedBox(height: 20)),
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
         ],
       ),
     );
   }
 }
 
-// ──────────────────────────────────────────────
-
-class _KpiCard extends StatelessWidget {
+class _Kpi extends StatelessWidget {
   final int count;
   final String label;
   final Color color;
-
-  const _KpiCard({required this.count, required this.label, required this.color});
+  const _Kpi({required this.count, required this.label, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -230,13 +208,12 @@ class _KpiCard extends StatelessWidget {
     return Expanded(
       child: Card(
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
           child: Column(
             children: [
-              Text('$count',
-                  style: tt.headlineMedium?.copyWith(color: color, fontWeight: FontWeight.w700)),
+              Text('$count', style: tt.headlineMedium?.copyWith(color: color, fontWeight: FontWeight.w700)),
               const SizedBox(height: 2),
-              Text(label, style: tt.bodySmall, textAlign: TextAlign.center),
+              Text(label, style: tt.bodySmall),
             ],
           ),
         ),
@@ -245,49 +222,37 @@ class _KpiCard extends StatelessWidget {
   }
 }
 
-class _FilterChip extends StatelessWidget {
+class _Chip extends StatelessWidget {
   final String label;
   final IconData? icon;
   final Color? color;
   final bool selected;
   final VoidCallback onTap;
-
-  const _FilterChip({
-    required this.label,
-    this.icon,
-    this.color,
-    required this.selected,
-    required this.onTap,
-  });
+  const _Chip({required this.label, this.icon, this.color, required this.selected, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final chipColor = color ?? AdminColors.primary;
+    final c = color ?? AdminColors.primary;
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
         decoration: BoxDecoration(
-          color: selected ? chipColor.withValues(alpha: 0.15) : AdminColors.card,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: selected ? chipColor.withValues(alpha: 0.4) : AdminColors.cardBorder,
-          ),
+          color: selected ? c.withValues(alpha: 0.1) : context.cardFill,
+          borderRadius: BorderRadius.circular(kRadius),
+          border: Border.all(color: selected ? c.withValues(alpha: 0.3) : context.border),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (icon != null) ...[
-              Icon(icon, size: 14, color: selected ? chipColor : AdminColors.textMuted),
-              const SizedBox(width: 4),
+              Icon(icon, size: 12, color: selected ? c : context.textMuted),
+              const SizedBox(width: 3),
             ],
-            Text(
-              label,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: selected ? chipColor : AdminColors.textSecondary,
-                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-              ),
-            ),
+            Text(label, style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: selected ? c : context.textSecondary,
+              fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+            )),
           ],
         ),
       ),

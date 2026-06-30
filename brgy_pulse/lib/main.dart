@@ -19,7 +19,9 @@ class BrgyPulseApp extends StatelessWidget {
     return MaterialApp(
       title: 'BrgyPulse',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.dark,
+      theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: ThemeMode.light, // default to light
       home: const AppShell(),
     );
   }

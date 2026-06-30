@@ -31,7 +31,7 @@ class _ReportBottomSheetState extends ConsumerState<ReportBottomSheet> {
           ? _descriptionController.text
           : AppConstants.categoryMeta[_selectedCategory]!.label,
       category: _selectedCategory,
-      location: const LatLng(14.5650, 120.9930), // Current location placeholder
+      location: const LatLng(AppConstants.mapCenterLat, AppConstants.mapCenterLng),
       status: ReportStatus.pending,
       timestamp: DateTime.now(),
       reportedBy: 'demo_user',
@@ -43,16 +43,7 @@ class _ReportBottomSheetState extends ConsumerState<ReportBottomSheet> {
     Navigator.pop(context);
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.check_circle_outline,
-                color: AppColors.success, size: 18),
-            const SizedBox(width: 8),
-            const Text('Report submitted'),
-          ],
-        ),
-      ),
+      const SnackBar(content: Text('Report submitted')),
     );
   }
 
@@ -61,16 +52,14 @@ class _ReportBottomSheetState extends ConsumerState<ReportBottomSheet> {
     final tt = Theme.of(context).textTheme;
 
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).bottomSheetTheme.backgroundColor,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.r + 4)),
       ),
       child: Padding(
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
-          left: 20,
-          right: 20,
-          top: 12,
+          left: 20, right: 20, top: 12,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -79,67 +68,51 @@ class _ReportBottomSheetState extends ConsumerState<ReportBottomSheet> {
             // Drag handle
             Center(
               child: Container(
-                width: 36,
-                height: 4,
+                width: 36, height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.textMuted.withValues(alpha: 0.4),
+                  color: context.textMuted.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
+            const SizedBox(height: 14),
+
+            Text('Report an Issue', style: tt.headlineSmall),
+            const SizedBox(height: 2),
+            Text('This will be sent to ${AppConstants.barangayName}.', style: tt.bodyMedium),
             const SizedBox(height: 16),
 
-            // Title
-            Text('Report an Issue', style: tt.headlineSmall),
-            const SizedBox(height: 4),
-            Text('This will be sent to your barangay office.',
-                style: tt.bodyMedium),
-            const SizedBox(height: 20),
-
-            // Category selector
+            // Category chips
             Text('Category', style: tt.labelLarge),
             const SizedBox(height: 8),
             Wrap(
-              spacing: 8,
-              runSpacing: 8,
+              spacing: 6,
+              runSpacing: 6,
               children: ReportCategory.values.map((cat) {
                 final meta = AppConstants.categoryMeta[cat]!;
                 final selected = _selectedCategory == cat;
                 return GestureDetector(
                   onTap: () => setState(() => _selectedCategory = cat),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: selected ? meta.color.withValues(alpha: 0.15) : AppColors.card,
-                      borderRadius: BorderRadius.circular(8),
+                      color: selected ? meta.color.withValues(alpha: 0.1) : context.cardFill,
+                      borderRadius: BorderRadius.circular(AppTheme.r),
                       border: Border.all(
-                        color: selected
-                            ? meta.color.withValues(alpha: 0.5)
-                            : AppColors.cardBorder,
-                        width: selected ? 1.5 : 1,
+                        color: selected ? meta.color.withValues(alpha: 0.4) : context.border,
                       ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(meta.icon,
-                            size: 16,
-                            color: selected
-                                ? meta.color
-                                : AppColors.textSecondary),
-                        const SizedBox(width: 6),
-                        Text(
-                          meta.label,
-                          style: tt.bodySmall?.copyWith(
-                            color: selected
-                                ? meta.color
-                                : AppColors.textSecondary,
-                            fontWeight:
-                                selected ? FontWeight.w600 : FontWeight.w400,
-                          ),
-                        ),
+                        Icon(meta.icon, size: 14,
+                            color: selected ? meta.color : context.textSecondary),
+                        const SizedBox(width: 4),
+                        Text(meta.label,
+                            style: tt.bodySmall?.copyWith(
+                              color: selected ? meta.color : context.textSecondary,
+                              fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                            )),
                       ],
                     ),
                   ),
@@ -147,11 +120,11 @@ class _ReportBottomSheetState extends ConsumerState<ReportBottomSheet> {
               }).toList(),
             ),
 
-            // Flood severity sub-selector
+            // Flood severity
             if (_selectedCategory == ReportCategory.flood) ...[
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
               Text('Severity', style: tt.labelLarge),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Row(
                 children: AppConstants.floodSeverity.map((level) {
                   final selected = _floodSeverity == level;
@@ -164,28 +137,20 @@ class _ReportBottomSheetState extends ConsumerState<ReportBottomSheet> {
                     child: GestureDetector(
                       onTap: () => setState(() => _floodSeverity = level),
                       child: Container(
-                        margin: const EdgeInsets.only(right: 8),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        margin: const EdgeInsets.only(right: 6),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
                         decoration: BoxDecoration(
-                          color: selected
-                              ? color.withValues(alpha: 0.15)
-                              : AppColors.card,
-                          borderRadius: BorderRadius.circular(8),
+                          color: selected ? color.withValues(alpha: 0.1) : context.cardFill,
+                          borderRadius: BorderRadius.circular(AppTheme.r),
                           border: Border.all(
-                            color: selected
-                                ? color.withValues(alpha: 0.5)
-                                : AppColors.cardBorder,
+                            color: selected ? color.withValues(alpha: 0.4) : context.border,
                           ),
                         ),
-                        child: Text(
-                          level,
-                          textAlign: TextAlign.center,
-                          style: tt.bodySmall?.copyWith(
-                            color: selected ? color : AppColors.textSecondary,
-                            fontWeight:
-                                selected ? FontWeight.w600 : FontWeight.w400,
-                          ),
-                        ),
+                        child: Text(level, textAlign: TextAlign.center,
+                            style: tt.bodySmall?.copyWith(
+                              color: selected ? color : context.textSecondary,
+                              fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                            )),
                       ),
                     ),
                   );
@@ -193,9 +158,7 @@ class _ReportBottomSheetState extends ConsumerState<ReportBottomSheet> {
               ),
             ],
 
-            const SizedBox(height: 16),
-
-            // Description
+            const SizedBox(height: 14),
             TextField(
               controller: _descriptionController,
               maxLines: 3,
@@ -205,27 +168,18 @@ class _ReportBottomSheetState extends ConsumerState<ReportBottomSheet> {
                 alignLabelWithHint: true,
               ),
             ),
-            const SizedBox(height: 12),
-
-            // Photo button
+            const SizedBox(height: 10),
             OutlinedButton.icon(
-              onPressed: () {
-                // TODO: image_picker integration
-              },
-              icon: const Icon(Icons.camera_alt_outlined, size: 18),
+              onPressed: () {},
+              icon: const Icon(Icons.camera_alt_outlined, size: 16),
               label: const Text('Attach Photo'),
             ),
-            const SizedBox(height: 16),
-
-            // Submit
+            const SizedBox(height: 14),
             ElevatedButton(
               onPressed: _submit,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-              ),
               child: const Text('Submit Report'),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
           ],
         ),
       ),

@@ -3,8 +3,8 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/constants.dart';
-import '../providers/admin_provider.dart';
 import '../models/report_model.dart';
+import '../providers/admin_provider.dart';
 
 class AdminMapScreen extends ConsumerWidget {
   const AdminMapScreen({super.key});
@@ -19,22 +19,17 @@ class AdminMapScreen extends ConsumerWidget {
       final meta = categoryMeta[report.category]!;
       return Marker(
         point: report.location,
-        width: 36,
-        height: 36,
-        child: Container(
-          decoration: BoxDecoration(
-            color: meta.color,
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 2),
-            boxShadow: [
-              BoxShadow(
-                color: meta.color.withValues(alpha: 0.4),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
+        width: 32, height: 32,
+        child: GestureDetector(
+          onTap: () => _showClaimSheet(context, ref, report),
+          child: Container(
+            decoration: BoxDecoration(
+              color: meta.color,
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2),
+            ),
+            child: Icon(meta.icon, color: Colors.white, size: 14),
           ),
-          child: Icon(meta.icon, color: Colors.white, size: 16),
         ),
       );
     }).toList();
@@ -43,10 +38,7 @@ class AdminMapScreen extends ConsumerWidget {
       child: Stack(
         children: [
           FlutterMap(
-            options: MapOptions(
-              initialCenter: const LatLng(14.5650, 120.9930),
-              initialZoom: 15.0,
-            ),
+            options: const MapOptions(initialCenter: LatLng(14.5650, 120.9930), initialZoom: 15.0),
             children: [
               TileLayer(
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -56,68 +48,47 @@ class AdminMapScreen extends ConsumerWidget {
             ],
           ),
 
-          // Top overlay
+          // Header
           Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
+            top: 0, left: 0, right: 0,
             child: Container(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    AdminColors.background.withValues(alpha: 0.9),
-                    AdminColors.background.withValues(alpha: 0.0),
-                  ],
-                ),
-              ),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              color: context.surface.withValues(alpha: 0.92),
               child: Row(
                 children: [
-                  Text('Report Map', style: tt.headlineSmall),
+                  Text('Task Map', style: tt.headlineSmall),
                   const Spacer(),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AdminColors.card,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AdminColors.cardBorder),
+                      color: context.cardFill,
+                      borderRadius: BorderRadius.circular(kRadius),
+                      border: Border.all(color: context.border),
                     ),
-                    child: Text(
-                      '${reports.length} pins',
-                      style: tt.bodySmall?.copyWith(color: AdminColors.textPrimary),
-                    ),
+                    child: Text('${reports.length} tasks', style: tt.bodySmall),
                   ),
                 ],
               ),
             ),
           ),
 
-          // Category chips at bottom
+          // Category chips
           Positioned(
-            bottom: 16,
-            left: 0,
-            right: 0,
+            bottom: 16, left: 0, right: 0,
             child: SizedBox(
-              height: 36,
+              height: 34,
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
-                  _MapChip(
-                    label: 'All',
-                    selected: activeFilter == null,
-                    onTap: () => ref.read(categoryFilterProvider.notifier).set(null),
-                  ),
+                  _MapChip(label: 'All', selected: activeFilter == null,
+                      onTap: () => ref.read(categoryFilterProvider.notifier).set(null)),
                   ...ReportCategory.values.map((cat) {
                     final meta = categoryMeta[cat]!;
                     return Padding(
                       padding: const EdgeInsets.only(left: 6),
                       child: _MapChip(
-                        label: meta.label,
-                        icon: meta.icon,
-                        color: meta.color,
+                        label: meta.label, icon: meta.icon, color: meta.color,
                         selected: activeFilter == cat,
                         onTap: () => ref.read(categoryFilterProvider.notifier).set(cat),
                       ),
@@ -131,6 +102,112 @@ class AdminMapScreen extends ConsumerWidget {
       ),
     );
   }
+
+  void _showClaimSheet(BuildContext context, WidgetRef ref, Report report) {
+    final meta = categoryMeta[report.category]!;
+    final sMeta = statusMeta[report.status]!;
+    final tt = Theme.of(context).textTheme;
+
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 40, height: 40,
+                    decoration: BoxDecoration(
+                      color: meta.bgColor,
+                      borderRadius: BorderRadius.circular(kRadius),
+                    ),
+                    child: Icon(meta.icon, color: meta.color, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(meta.label, style: tt.headlineSmall),
+                        Text('Reported by ${report.reportedBy}', style: tt.bodySmall),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: sMeta.color.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(sMeta.label,
+                        style: tt.bodySmall?.copyWith(color: sMeta.color, fontWeight: FontWeight.w600)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Text(report.description, style: tt.bodyLarge),
+              const SizedBox(height: 16),
+
+              if (report.status == ReportStatus.pending)
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      ref.read(adminReportProvider.notifier).claimReport(report.id, 'Tanod Jun Bautista');
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Task claimed')),
+                      );
+                    },
+                    icon: const Icon(Icons.assignment_ind_rounded, size: 18),
+                    label: const Text('Claim This Task'),
+                  ),
+                ),
+              if (report.status == ReportStatus.inProgress)
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      ref.read(adminReportProvider.notifier).resolveReport(report.id);
+                      ref.read(officerProfileProvider.notifier).completeTask(report.id, report.category);
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Task resolved! +${categoryPoints[report.category] ?? 10} points')),
+                      );
+                    },
+                    icon: const Icon(Icons.check_circle_outline, size: 18),
+                    label: const Text('Mark Resolved'),
+                    style: ElevatedButton.styleFrom(backgroundColor: AdminColors.success),
+                  ),
+                ),
+              if (report.status == ReportStatus.resolved)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AdminColors.success.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(kRadius),
+                    border: Border.all(color: AdminColors.success.withValues(alpha: 0.2)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.check_circle_rounded, size: 16, color: AdminColors.success),
+                      const SizedBox(width: 8),
+                      Text('Already resolved', style: tt.bodyMedium?.copyWith(color: AdminColors.success)),
+                    ],
+                  ),
+                ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        );
+      },
+    );
+  }
 }
 
 class _MapChip extends StatelessWidget {
@@ -139,45 +216,31 @@ class _MapChip extends StatelessWidget {
   final Color? color;
   final bool selected;
   final VoidCallback onTap;
-
-  const _MapChip({
-    required this.label,
-    this.icon,
-    this.color,
-    required this.selected,
-    required this.onTap,
-  });
+  const _MapChip({required this.label, this.icon, this.color, required this.selected, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final chipColor = color ?? AdminColors.primary;
+    final c = color ?? AdminColors.primary;
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
         decoration: BoxDecoration(
-          color: selected
-              ? chipColor.withValues(alpha: 0.85)
-              : AdminColors.card.withValues(alpha: 0.9),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: selected ? chipColor : AdminColors.cardBorder,
-          ),
+          color: selected ? c.withValues(alpha: 0.85) : context.cardFill.withValues(alpha: 0.9),
+          borderRadius: BorderRadius.circular(kRadius),
+          border: Border.all(color: selected ? c : context.border),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (icon != null) ...[
-              Icon(icon, size: 14, color: selected ? Colors.white : AdminColors.textMuted),
-              const SizedBox(width: 4),
+              Icon(icon, size: 12, color: selected ? Colors.white : context.textMuted),
+              const SizedBox(width: 3),
             ],
-            Text(
-              label,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: selected ? Colors.white : AdminColors.textSecondary,
-                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-              ),
-            ),
+            Text(label, style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: selected ? Colors.white : context.textSecondary,
+              fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+            )),
           ],
         ),
       ),

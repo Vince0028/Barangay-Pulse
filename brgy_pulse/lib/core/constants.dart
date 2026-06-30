@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../models/report_model.dart';
+import 'theme.dart';
 
 // ──────────────────────────────────────────────
-// Category visual metadata — icons and colors
+// Category visual metadata — Material Icons, no emojis
 // ──────────────────────────────────────────────
 
 class CategoryMeta {
@@ -22,24 +23,29 @@ class CategoryMeta {
 class AppConstants {
   AppConstants._();
 
+  static const String barangayName = 'Barangay 183';
+  static const double mapCenterLat = 14.5650;
+  static const double mapCenterLng = 120.9930;
+  static const double barangayRadiusMeters = 500;
+
   static const Map<ReportCategory, CategoryMeta> categoryMeta = {
     ReportCategory.trash: CategoryMeta(
       label: 'Uncollected Trash',
       icon: Icons.delete_outline_rounded,
-      color: Color(0xFFCC8B3C),
-      bgColor: Color(0x1ACC8B3C),
+      color: Color(0xFFB8860B),
+      bgColor: Color(0x1AB8860B),
     ),
     ReportCategory.parking: CategoryMeta(
       label: 'Illegal Parking',
       icon: Icons.local_parking_rounded,
-      color: Color(0xFF5B8DEF),
-      bgColor: Color(0x1A5B8DEF),
+      color: Color(0xFF4A7FBF),
+      bgColor: Color(0x1A4A7FBF),
     ),
     ReportCategory.noise: CategoryMeta(
       label: 'Noise Complaint',
       icon: Icons.volume_up_rounded,
-      color: Color(0xFF9B59B6),
-      bgColor: Color(0x1A9B59B6),
+      color: Color(0xFF7E57C2),
+      bgColor: Color(0x1A7E57C2),
     ),
     ReportCategory.curfew: CategoryMeta(
       label: 'Curfew Violator',
@@ -50,36 +56,34 @@ class AppConstants {
     ReportCategory.flood: CategoryMeta(
       label: 'Flood Report',
       icon: Icons.water_rounded,
-      color: Color(0xFF2196F3),
-      bgColor: Color(0x1A2196F3),
+      color: Color(0xFF1976D2),
+      bgColor: Color(0x1A1976D2),
     ),
     ReportCategory.sos: CategoryMeta(
       label: 'SOS / Need Help',
       icon: Icons.warning_amber_rounded,
-      color: Color(0xFFE74C3C),
-      bgColor: Color(0x1AE74C3C),
+      color: Color(0xFFDC2626),
+      bgColor: Color(0x1ADC2626),
     ),
     ReportCategory.safeZone: CategoryMeta(
       label: 'Safe Zone',
       icon: Icons.health_and_safety_rounded,
-      color: Color(0xFF27AE60),
-      bgColor: Color(0x1A27AE60),
+      color: Color(0xFF16A34A),
+      bgColor: Color(0x1A16A34A),
     ),
   };
 
-  // Flood severity levels
   static const List<String> floodSeverity = ['Low', 'Medium', 'High'];
 
-  // Report status display info
-  static const Map<ReportStatus, _StatusMeta> statusMeta = {
-    ReportStatus.pending: _StatusMeta(label: 'Pending', color: Color(0xFFF5A623)),
-    ReportStatus.inProgress: _StatusMeta(label: 'In Progress', color: Color(0xFF4A90D9)),
-    ReportStatus.resolved: _StatusMeta(label: 'Resolved', color: Color(0xFF27AE60)),
+  static const Map<ReportStatus, StatusMeta> statusMeta = {
+    ReportStatus.pending: StatusMeta(label: 'Pending', color: Color(0xFFD97706)),
+    ReportStatus.inProgress: StatusMeta(label: 'In Progress', color: Color(0xFF2563EB)),
+    ReportStatus.resolved: StatusMeta(label: 'Resolved', color: Color(0xFF16A34A)),
   };
 }
 
-class _StatusMeta {
+class StatusMeta {
   final String label;
   final Color color;
-  const _StatusMeta({required this.label, required this.color});
+  const StatusMeta({required this.label, required this.color});
 }

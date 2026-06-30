@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'map_screen.dart';
+import 'announcements_screen.dart';
 import 'my_reports_screen.dart';
 import 'profile_screen.dart';
 
@@ -17,6 +18,7 @@ class _AppShellState extends State<AppShell> {
   final _screens = const [
     HomeScreen(),
     MapScreen(),
+    AnnouncementsScreen(),
     MyReportsScreen(),
     ProfileScreen(),
   ];
@@ -41,6 +43,11 @@ class _AppShellState extends State<AppShell> {
             icon: Icon(Icons.map_outlined),
             selectedIcon: Icon(Icons.map_rounded),
             label: 'Map',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.campaign_outlined),
+            selectedIcon: Icon(Icons.campaign_rounded),
+            label: 'News',
           ),
           NavigationDestination(
             icon: Icon(Icons.assignment_outlined),
