@@ -6,11 +6,20 @@ import '../core/constants.dart';
 import '../models/report_model.dart';
 import '../providers/admin_provider.dart';
 
-class AdminMapScreen extends ConsumerWidget {
+class AdminMapScreen extends ConsumerStatefulWidget {
   const AdminMapScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AdminMapScreen> createState() => _AdminMapScreenState();
+}
+
+class _AdminMapScreenState extends ConsumerState<AdminMapScreen> {
+  final MapController _mapController = MapController();
+  bool _locationEnabled = false;
+  static const _myLocation = LatLng(14.5315, 121.0022); // Mock actual user location
+
+  @override
+  Widget build(BuildContext context) {
     final reports = ref.watch(filteredReportsProvider);
     final activeFilter = ref.watch(categoryFilterProvider);
     final tt = Theme.of(context).textTheme;
@@ -34,10 +43,30 @@ class AdminMapScreen extends ConsumerWidget {
       );
     }).toList();
 
+    if (_locationEnabled) {
+      markers.add(
+        Marker(
+          point: _myLocation,
+          width: 24, height: 24,
+          child: Container(
+            decoration: BoxDecoration(
+              color: AdminColors.primary,
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 3),
+              boxShadow: [
+                BoxShadow(color: AdminColors.primary.withValues(alpha: 0.4), blurRadius: 8, spreadRadius: 4),
+              ],
+            ),
+          ),
+        )
+      );
+    }
+
     return SafeArea(
       child: Stack(
         children: [
           FlutterMap(
+            mapController: _mapController,
             options: const MapOptions(initialCenter: LatLng(14.5650, 120.9930), initialZoom: 15.0),
             children: [
               TileLayer(
@@ -71,6 +100,36 @@ class AdminMapScreen extends ConsumerWidget {
               ),
             ),
           ),
+
+          // Location prompt
+          if (!_locationEnabled)
+            Positioned(
+              top: 60, left: 16, right: 16,
+              child: GestureDetector(
+                onTap: () {
+                  setState(() => _locationEnabled = true);
+                  _mapController.move(_myLocation, 17);
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AdminColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(kRadius),
+                    border: Border.all(color: AdminColors.primary.withValues(alpha: 0.15)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.location_on_outlined, size: 16, color: AdminColors.primary),
+                      const SizedBox(width: 6),
+                      Expanded(child: Text('Enable location to view your position',
+                          style: tt.bodySmall?.copyWith(color: AdminColors.primary))),
+                      Text('Enable', style: tt.bodySmall?.copyWith(
+                          color: AdminColors.primary, fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
 
           // Category chips
           Positioned(
@@ -157,7 +216,8 @@ class AdminMapScreen extends ConsumerWidget {
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     onPressed: () {
-                      ref.read(adminReportProvider.notifier).claimReport(report.id, 'Tanod Jun Bautista');
+                      final officer = ref.read(officerProfileProvider);
+                      ref.read(adminReportProvider.notifier).claimReport(report.id, officer.name);
                       Navigator.pop(ctx);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Task claimed')),

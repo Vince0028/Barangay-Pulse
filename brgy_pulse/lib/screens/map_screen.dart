@@ -19,7 +19,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   final MapController _mapController = MapController();
   bool _cleanMode = false;
   bool _pinPlacementMode = false;
+  bool _locationEnabled = false;
   LatLng _pinLocation = const LatLng(AppConstants.mapCenterLat, AppConstants.mapCenterLng);
+  static const _myLocation = LatLng(14.5315, 121.0022); // Mock actual user location
 
   // Coordinate input controllers
   final _latController = TextEditingController();
@@ -101,6 +103,25 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         ),
       );
     }).toList();
+
+    if (_locationEnabled) {
+      markers.add(
+        Marker(
+          point: _myLocation,
+          width: 24, height: 24,
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 3),
+              boxShadow: [
+                BoxShadow(color: AppColors.primary.withValues(alpha: 0.4), blurRadius: 8, spreadRadius: 4),
+              ],
+            ),
+          ),
+        )
+      );
+    }
 
     // Add draggable pin in placement mode
     if (_pinPlacementMode) {
@@ -236,25 +257,31 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           ),
 
           // Location prompt (only when not in pin mode)
-          if (!_pinPlacementMode)
+          if (!_pinPlacementMode && !_locationEnabled)
             Positioned(
               top: 44, left: 16, right: 16,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(AppTheme.r),
-                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.15)),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.location_on_outlined, size: 16, color: AppColors.primary),
-                    const SizedBox(width: 6),
-                    Expanded(child: Text('Enable location for accurate reporting',
-                        style: tt.bodySmall?.copyWith(color: AppColors.primary))),
-                    Text('Enable', style: tt.bodySmall?.copyWith(
-                        color: AppColors.primary, fontWeight: FontWeight.w600)),
-                  ],
+              child: GestureDetector(
+                onTap: () {
+                  setState(() => _locationEnabled = true);
+                  _mapController.move(_myLocation, 17);
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(AppTheme.r),
+                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.15)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.location_on_outlined, size: 16, color: AppColors.primary),
+                      const SizedBox(width: 6),
+                      Expanded(child: Text('Enable location for accurate reporting',
+                          style: tt.bodySmall?.copyWith(color: AppColors.primary))),
+                      Text('Enable', style: tt.bodySmall?.copyWith(
+                          color: AppColors.primary, fontWeight: FontWeight.w600)),
+                    ],
+                  ),
                 ),
               ),
             ),

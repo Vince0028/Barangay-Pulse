@@ -74,9 +74,8 @@ class AdminProfileScreen extends ConsumerWidget {
 
             Text('Top Officers', style: tt.headlineSmall),
             const SizedBox(height: 8),
-            _LeaderRow(rank: 1, name: 'Tanod Jun Bautista', pts: 580),
-            _LeaderRow(rank: 2, name: 'Kap. Ricardo Reyes', pts: 450),
-            _LeaderRow(rank: 3, name: 'Tanod Mark Villanueva', pts: 390),
+            // TODO: Fetch top officers from database
+            Text('No officers ranked yet.', style: tt.bodySmall?.copyWith(color: context.textMuted)),
 
             const SizedBox(height: 24),
 

@@ -43,7 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       if (_isRegister) {
-        await SupabaseService.signUp(
+        final res = await SupabaseService.signUp(
           _emailController.text.trim(),
           _passwordController.text.trim(),
           data: {
@@ -52,12 +52,28 @@ class _LoginScreenState extends State<LoginScreen> {
             'role': 'civilian',
           },
         );
+        
+        if (res.session == null) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Account created! Please check your email to confirm your account.'),
+                duration: Duration(seconds: 5),
+              ),
+            );
+            setState(() {
+              _isRegister = false; // Switch to login mode
+            });
+          }
+          return;
+        }
       } else {
         await SupabaseService.signIn(
           _emailController.text.trim(),
           _passwordController.text.trim(),
         );
       }
+      
       if (mounted) {
         Navigator.pushAndRemoveUntil(
           context,

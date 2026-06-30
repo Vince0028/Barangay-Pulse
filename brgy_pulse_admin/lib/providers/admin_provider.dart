@@ -168,8 +168,16 @@ class OfficerProfileNotifier extends Notifier<Official> {
         missionsCompleted: res['missions_completed'] ?? 0,
         averageRating: (res['average_rating'] as num?)?.toDouble() ?? 0.0,
         ratingsCount: res['ratings_count'] ?? 0,
-        completedReportIds: state.completedReportIds, // In a real app we'd query reports claimed by this user that are resolved
+        completedReportIds: state.completedReportIds,
       );
+    } else {
+      // Fallback: just fetch their profile if they aren't in the officials table yet
+      final profileRes = await SupabaseService.client.from('profiles').select().eq('id', uid).maybeSingle();
+      if (profileRes != null) {
+        state = state.copyWith(
+          name: profileRes['full_name'] ?? 'New User',
+        );
+      }
     }
   }
 
