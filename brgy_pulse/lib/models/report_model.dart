@@ -25,6 +25,7 @@ class Report {
   final ReportStatus status;
   final DateTime timestamp;
   final String reportedBy;
+  final String? floodSeverity; // Low, Medium, High — only for flood reports
 
   Report({
     required this.id,
@@ -35,7 +36,32 @@ class Report {
     this.status = ReportStatus.pending,
     required this.timestamp,
     required this.reportedBy,
+    this.floodSeverity,
   });
+
+  Report copyWith({
+    String? id,
+    String? description,
+    ReportCategory? category,
+    LatLng? location,
+    String? imageUrl,
+    ReportStatus? status,
+    DateTime? timestamp,
+    String? reportedBy,
+    String? floodSeverity,
+  }) {
+    return Report(
+      id: id ?? this.id,
+      description: description ?? this.description,
+      category: category ?? this.category,
+      location: location ?? this.location,
+      imageUrl: imageUrl ?? this.imageUrl,
+      status: status ?? this.status,
+      timestamp: timestamp ?? this.timestamp,
+      reportedBy: reportedBy ?? this.reportedBy,
+      floodSeverity: floodSeverity ?? this.floodSeverity,
+    );
+  }
 
   Map<String, dynamic> toMap() {
     return {
@@ -50,6 +76,7 @@ class Report {
       'status': status.name,
       'timestamp': timestamp.toIso8601String(),
       'reportedBy': reportedBy,
+      'floodSeverity': floodSeverity,
     };
   }
 
@@ -63,6 +90,7 @@ class Report {
       status: ReportStatus.values.byName(map['status']),
       timestamp: DateTime.parse(map['timestamp']),
       reportedBy: map['reportedBy'],
+      floodSeverity: map['floodSeverity'],
     );
   }
 }
