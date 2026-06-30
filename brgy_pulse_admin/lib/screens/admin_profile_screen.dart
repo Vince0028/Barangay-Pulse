@@ -25,6 +25,18 @@ class AdminProfileScreen extends ConsumerWidget {
           children: [
             const SizedBox(height: 24),
 
+            // Refresh button
+            Align(
+              alignment: Alignment.centerRight,
+              child: IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: () {
+                  ref.read(officerProfileProvider.notifier).refresh();
+                  ref.read(adminReportProvider.notifier).refresh();
+                },
+              ),
+            ),
+
             Center(
               child: Column(
                 children: [

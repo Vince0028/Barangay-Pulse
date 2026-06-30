@@ -72,7 +72,15 @@ class _BroadcastScreenState extends ConsumerState<BroadcastScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 20),
-            Text('Emergency Broadcast', style: tt.headlineLarge),
+            Row(
+              children: [
+                Expanded(child: Text('Emergency Broadcast', style: tt.headlineLarge)),
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  onPressed: () => ref.read(broadcastProvider.notifier).refresh(),
+                ),
+              ],
+            ),
             const SizedBox(height: 4),
             Text('Send alerts to all registered civilians.', style: tt.bodyMedium),
             const SizedBox(height: 20),

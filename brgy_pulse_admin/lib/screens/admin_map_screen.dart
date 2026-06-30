@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import '../core/constants.dart';
 import '../models/report_model.dart';
 import '../providers/admin_provider.dart';
@@ -16,7 +17,43 @@ class AdminMapScreen extends ConsumerStatefulWidget {
 class _AdminMapScreenState extends ConsumerState<AdminMapScreen> {
   final MapController _mapController = MapController();
   bool _locationEnabled = false;
-  static const _myLocation = LatLng(14.5315, 121.0022); // Mock actual user location
+  LatLng _currentLocation = const LatLng(14.5645, 120.9925); // Default before fetch
+
+  Future<void> _getCurrentLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Location services are disabled.')));
+      return;
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Location permissions are denied')));
+        return;
+      }
+    }
+    
+    if (permission == LocationPermission.deniedForever) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Location permissions are permanently denied, we cannot request permissions.')));
+      return;
+    }
+
+    try {
+      Position position = await Geolocator.getCurrentPosition();
+      setState(() {
+        _currentLocation = LatLng(position.latitude, position.longitude);
+        _locationEnabled = true;
+      });
+      _mapController.move(_currentLocation, 17);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error getting location: $e')));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +83,7 @@ class _AdminMapScreenState extends ConsumerState<AdminMapScreen> {
     if (_locationEnabled) {
       markers.add(
         Marker(
-          point: _myLocation,
+          point: _currentLocation,
           width: 24, height: 24,
           child: Container(
             decoration: BoxDecoration(
@@ -89,7 +126,7 @@ class _AdminMapScreenState extends ConsumerState<AdminMapScreen> {
                   const Spacer(),
                   IconButton(
                     icon: const Icon(Icons.refresh),
-                    onSize: 20,
+                    iconSize: 20,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                     onPressed: () {
@@ -116,10 +153,7 @@ class _AdminMapScreenState extends ConsumerState<AdminMapScreen> {
             Positioned(
               top: 60, left: 16, right: 16,
               child: GestureDetector(
-                onTap: () {
-                  setState(() => _locationEnabled = true);
-                  _mapController.move(_myLocation, 17);
-                },
+                onTap: _getCurrentLocation,
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(

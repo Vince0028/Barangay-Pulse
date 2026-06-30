@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:math';
+import 'package:geolocator/geolocator.dart';
 import '../core/constants.dart';
 import '../core/theme.dart';
 import '../providers/report_provider.dart';
@@ -21,7 +22,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   bool _pinPlacementMode = false;
   bool _locationEnabled = false;
   LatLng _pinLocation = const LatLng(AppConstants.mapCenterLat, AppConstants.mapCenterLng);
-  static const _myLocation = LatLng(14.5315, 121.0022); // Mock actual user location
+  LatLng _currentLocation = const LatLng(14.5645, 120.9925); // Default before fetch
 
   // Coordinate input controllers
   final _latController = TextEditingController();
@@ -46,6 +47,42 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       result.add(LatLng(center.latitude + dLat, center.longitude + dLng));
     }
     return result;
+  }
+
+  Future<void> _getCurrentLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Location services are disabled.')));
+      return;
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Location permissions are denied')));
+        return;
+      }
+    }
+    
+    if (permission == LocationPermission.deniedForever) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Location permissions are permanently denied, we cannot request permissions.')));
+      return;
+    }
+
+    try {
+      Position position = await Geolocator.getCurrentPosition();
+      setState(() {
+        _currentLocation = LatLng(position.latitude, position.longitude);
+        _locationEnabled = true;
+      });
+      _mapController.move(_currentLocation, 17);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error getting location: $e')));
+    }
   }
 
   void _enterPinMode() {
@@ -107,7 +144,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     if (_locationEnabled) {
       markers.add(
         Marker(
-          point: _myLocation,
+          point: _currentLocation,
           width: 24, height: 24,
           child: Container(
             decoration: BoxDecoration(
@@ -251,10 +288,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             Positioned(
               top: 44, left: 16, right: 16,
               child: GestureDetector(
-                onTap: () {
-                  setState(() => _locationEnabled = true);
-                  _mapController.move(_myLocation, 17);
-                },
+                onTap: _getCurrentLocation,
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(

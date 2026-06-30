@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/theme.dart';
 import '../services/supabase_service.dart';
 import '../providers/official_provider.dart';
+import '../providers/report_provider.dart';
 import 'auth/login_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -24,6 +25,18 @@ class ProfileScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 24),
+
+            // Refresh button
+            Align(
+              alignment: Alignment.centerRight,
+              child: IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: () {
+                  ref.read(officialProvider.notifier).refresh();
+                  ref.read(reportProvider.notifier).refresh();
+                },
+              ),
+            ),
 
             // User card
             Center(

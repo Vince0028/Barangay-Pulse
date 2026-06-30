@@ -57,7 +57,15 @@ class _PostsScreenState extends ConsumerState<PostsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 20),
-            Text('Create Post', style: tt.headlineLarge),
+            Row(
+              children: [
+                Expanded(child: Text('Create Post', style: tt.headlineLarge)),
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  onPressed: () => ref.read(adminAnnouncementProvider.notifier).refresh(),
+                ),
+              ],
+            ),
             const SizedBox(height: 4),
             Text('Publish announcements to all residents.', style: tt.bodyMedium),
             const SizedBox(height: 20),

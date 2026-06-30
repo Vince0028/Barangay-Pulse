@@ -25,7 +25,15 @@ class MyReportsScreen extends ConsumerWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
-            child: Text('My Reports', style: tt.headlineLarge),
+            child: Row(
+              children: [
+                Expanded(child: Text('My Reports', style: tt.headlineLarge)),
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  onPressed: () => ref.read(reportProvider.notifier).refresh(),
+                ),
+              ],
+            ),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),

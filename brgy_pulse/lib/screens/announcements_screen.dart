@@ -24,7 +24,15 @@ class AnnouncementsScreen extends ConsumerWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
-            child: Text('Announcements', style: tt.headlineLarge),
+            child: Row(
+              children: [
+                Expanded(child: Text('Announcements', style: tt.headlineLarge)),
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  onPressed: () => ref.read(announcementProvider.notifier).refresh(),
+                ),
+              ],
+            ),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
