@@ -18,7 +18,7 @@ BrgyPulse is split into two primary operational modes:
 
 ## 👥 Team
 
-**Team Name:** [Insert Team Name Here]
+**Team Name:** Merge Conflict
 
 **Members:**
 - Vince Nelmar Alobin
